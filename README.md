@@ -97,3 +97,51 @@ Je vérifie le code depuis la racine avec `PYTHONPATH=functions python -m pytest
 ## Mon tableau de bord
 
 Je consulte les 20 dernières inférences sur le site statique. Chaque ligne indique le fichier, l’heure, le cultivar prédit, la confiance et la durée du calcul. Le graphique compte les prédictions de chaque cultivar parmi les lignes affichées. La page interroge `/api/recent` toutes les 30 secondes. Avant la mise en ligne, je configure `web/config.js` avec l’adresse HTTPS de ma Function App et j’autorise uniquement l’origine de mon site dans sa configuration CORS.
+
+## Ce que j’ai vérifié sur mon abonnement
+
+J’utilise mon abonnement Azure for Students. La stratégie de mon école autorise cinq régions : Pologne Centre, Norvège Est, Espagne Centre, Suisse Nord et Italie Nord. Les cinq figurent également dans la liste Flex Consumption. J’ai choisi Suisse Nord, proche de Paris, et j’y ai vérifié la création de Cosmos DB avec Free Tier. J’ai regroupé les ressources sous `rg-projet-ft` et les étiquettes `projet=dscc` et `equipe=ft`.
+
+| Restriction rencontrée | Ce que j’ai fait |
+|---|---|
+| France Centre absente de ma liste | J’ai utilisé Suisse Nord après vérification des deux listes. |
+| Deux fournisseurs Azure désactivés | J’ai demandé l’activation de Microsoft.App et Microsoft.EventGrid. |
+| Mon abonnement suit les coûts en euros | J’ai créé un budget de groupe de 22,85 € avec alertes à 20, 50 et 80 %. Je conserve la même période de suivi entre novembre et décembre. |
+| Je travaille seul pour le moment | J’ai protégé la production par un relecteur obligatoire. Seule main peut déployer, et je dois approuver manuellement avec mon compte. |
+
+Le 23 novembre, 25 USD correspondaient à environ 22,85 € au taux de référence de 1,0939 USD par euro. Le budget en euros sert de repère. Je suivrai le montant réellement consommé, notamment parce que les alertes Azure peuvent arriver après les dépenses. [Taux de référence BCE](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)
+
+J’ai exécuté douze tests et vérifié dans GitHub Actions la construction de l’image, la réponse de `/health` et le SHA renvoyé par `/version`. Lors du premier essai, le conteneur venait de démarrer quand le test a rencontré une connexion réinitialisée. J’ai ajouté une attente avec des essais bornés. Les deux exécutions suivantes sont passées. [Capture des exécutions](docs/ci-github.png)
+
+### Mes requêtes dans Log Analytics
+
+Je compte chaque résultat enregistré une seule fois, même si le worker a repris après un échec.
+
+```kusto
+AppTraces
+| extend r = parse_json(Message)
+| where tostring(r.event) == "wine.persisted"
+| summarize premiere_ecriture=min(TimeGenerated) by id=tostring(r.id)
+| summarize inferences=count() by bin(premiere_ecriture, 1h)
+| order by premiere_ecriture asc
+```
+
+Pour les cinq fichiers les plus lents, je mesure la durée de calcul du modèle. Les attentes de la file et du réseau sont exclues de cette durée.
+
+```kusto
+AppTraces
+| extend r = parse_json(Message)
+| where tostring(r.event) == "wine.persisted"
+| summarize calcul_ms=max(todouble(r.durationMs)) by fichier=tostring(r.fileName)
+| top 5 by calcul_ms desc
+```
+
+Pour vérifier les réponses HTTP, je regroupe les requêtes de prédiction par code.
+
+```kusto
+AppRequests
+| where Url endswith "/predict"
+| summarize appels=sum(ItemCount) by ResultCode
+| order by appels desc
+```
+Pour ma démonstration, je conserve un [exemple illustratif de notification Event Grid](docs/exemples/evenement.json).

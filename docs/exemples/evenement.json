@@ -1,0 +1,9 @@
+{
+  "id": "exemple-01",
+  "eventType": "Microsoft.Storage.BlobCreated",
+  "subject": "/blobServices/default/containers/input/blobs/vin-valide.json",
+  "eventTime": "2026-11-24T10:00:00Z",
+  "data": {"api": "PutBlob", "eTag": "8D000001", "contentLength": 81},
+  "dataVersion": "1",
+  "metadataVersion": "1"
+}

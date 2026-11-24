@@ -103,7 +103,8 @@ def worker(msg: func.QueueMessage):
             pass  # Un autre worker a déjà enregistré cette version.
     canonical = json.loads(target.download_blob().readall())
     database().upsert_item(canonical)
-    log.info("Inference enregistrée", extra={"fileName": name, "durationMs": canonical["durationMs"]})
+    log.info(json.dumps({"event": "wine.persisted", "id": key, "fileName": name,
+                         "durationMs": canonical["durationMs"]}))
 
 
 @app.route(route="recent", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
