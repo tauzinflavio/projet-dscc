@@ -45,12 +45,11 @@ jobs:
           az functionapp config appsettings set -g "$RG" -n "$FUNC" --settings API_URL="$API_URL" PipelineStorage__blobServiceUri="https://$ST.blob.core.windows.net" PipelineStorage__queueServiceUri="https://$ST.queue.core.windows.net" PipelineStorage__credential=managedidentity COSMOS_ENDPOINT=https://cosmos-dscc-ft26.documents.azure.com:443/ -o none
           az functionapp cors remove -g "$RG" -n "$FUNC" --allowed-origins '*' 'https://portal.azure.com' -o none
           az functionapp cors add -g "$RG" -n "$FUNC" --allowed-origins "${origin%/}" -o none
-      - uses: Azure/functions-action@v1
-        with:
-          app-name: func-dscc-ft26
-          package: functions
-          sku: flexconsumption
-          remote-build: true
+      - name: Publier les trois fonctions dans le groupe du projet
+        working-directory: functions
+        run: |
+          zip -q "$RUNNER_TEMP/functions.zip" function_app.py pipeline.py host.json requirements.txt
+          az functionapp deployment source config-zip -g "$RG" -n "$FUNC" --src "$RUNNER_TEMP/functions.zip" --build-remote true --timeout 600 -o none
       - name: Publier le modèle et le tableau de bord
         run: |
           hostname=$(az functionapp show -g "$RG" -n "$FUNC" --query defaultHostName -o tsv)

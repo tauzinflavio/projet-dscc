@@ -147,3 +147,5 @@ AppRequests
 Pour ma démonstration, je conserve un [exemple illustratif de notification Event Grid](docs/exemples/evenement.json).
 
 Pour tester les reprises, j’ai simulé deux incidents en local. Dans le premier test, le worker reçoit deux fois le même message. Dans le second, Cosmos DB échoue après l’écriture du résultat dans Blob Storage. Dans les deux cas, j’ai vérifié que le modèle est appelé une seule fois et que les deux tentatives présentent le même document à Cosmos DB.
+
+J’ai vérifié la connexion OIDC et la version de mon API en production au deuxième déploiement. L’action de publication des fonctions signalait ensuite que mon application était introuvable. Pour cibler précisément ma Function App, je fournis à Azure CLI son nom et son groupe de ressources. Mon archive contient les deux modules Python, la configuration de l’hôte et la liste des dépendances à installer sur Azure.
