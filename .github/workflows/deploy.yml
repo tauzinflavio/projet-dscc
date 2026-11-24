@@ -52,7 +52,8 @@ jobs:
           az functionapp deployment source config-zip -g "$RG" -n "$FUNC" --src "$RUNNER_TEMP/functions.zip" --build-remote true --timeout 600 -o none
       - name: Publier le modèle et le tableau de bord
         run: |
-          hostname=$(az functionapp show -g "$RG" -n "$FUNC" --query defaultHostName -o tsv)
+          hostname=$(az rest -m get -u "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNC?api-version=2024-04-01" --query properties.defaultHostName -o tsv)
+          test -n "$hostname"
           printf 'window.RECENT_URL = "https://%s/api/recent";\n' "$hostname" > web/config.js
           az storage blob upload --auth-mode login --account-name "$ST" -c models -n model-1.0.0.joblib -f model/model-1.0.0.joblib --overwrite -o none
           az storage blob upload-batch --auth-mode login --account-name "$ST" -d '$web' -s web --overwrite -o none
