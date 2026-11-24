@@ -6,6 +6,8 @@ RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir -r api/
 
 FROM python:3.12-slim
 WORKDIR /srv
+ARG GIT_SHA=local
+ENV GIT_SHA=$GIT_SHA
 ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1
 COPY --from=builder /opt/venv /opt/venv
 COPY api/main.py api/__init__.py ./api/

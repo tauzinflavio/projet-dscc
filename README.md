@@ -1,20 +1,20 @@
 # Pipeline de Machine Learning événementiel sur Azure
 
 **Flavio Tauzin · équipe technique ft · soutenance le 2 décembre 2026.**
-Abonnement d’intégration prévu : Azure for Students de Flavio. Compte GitHub : tauzinflavio. Développement individuel pour le moment. Le sujet prévoit trois ou quatre membres ; l’accord pédagogique pour une présentation individuelle reste à confirmer.
+Je travaille pour le moment seul, sur mon compte GitHub tauzinflavio et avec mon abonnement Azure for Students. Le sujet prévoit trois ou quatre membres ; l’accord pédagogique pour une présentation individuelle reste à confirmer.
 
 ## Premier jalon local
 
-À partir de treize mesures chimiques, l’API prédit lequel de trois cultivars de vigne correspond à l’échantillon. Le modèle renvoie la classe UCI (1, 2 ou 3) et la probabilité estimée. Le jeu Wine comporte 178 échantillons, sans valeur manquante. Le fichier d’origine pèse environ 10,5 Ko. Données de S. Aeberhard et M. Forina, distribuées par scikit-learn à partir du jeu UCI, sous licence CC BY 4.0. [Données et attribution](https://doi.org/10.24432/C5PC7J) · [Licence](https://creativecommons.org/licenses/by/4.0/)
+J’ai choisi de prédire, à partir de treize mesures chimiques, lequel de trois cultivars de vigne correspond à l’échantillon. Le modèle renvoie la classe UCI (1, 2 ou 3) et la probabilité estimée. Le jeu Wine comporte 178 échantillons, sans valeur manquante. Le fichier d’origine pèse environ 10,5 Ko. Données de S. Aeberhard et M. Forina, distribuées par scikit-learn à partir du jeu UCI, sous licence CC BY 4.0. [Données et attribution](https://doi.org/10.24432/C5PC7J) · [Licence](https://creativecommons.org/licenses/by/4.0/)
 
-La séparation est stratifiée avec la graine 42 : 133 exemples pour apprendre, 45 réservés au test. Le scaler est ajusté sur les données d’entraînement. Le classifieur naïf prédit toujours la classe majoritaire du train.
+J’ai gardé 45 exemples pour le test et 133 pour l’entraînement, avec la même proportion de chaque classe et la graine 42. J’ai ajusté la standardisation sur les données d’entraînement. Le classifieur naïf prédit toujours la classe majoritaire du train.
 
 | Modèle | Exactitude sur le test | F1 macro |
 |---|---:|---:|
 | Référence majoritaire | 0,400 | 0,190 |
 | Régression logistique standardisée, version 1.0.0 | 1,000 | 1,000 |
 
-Les 45 prédictions correctes concernent ce petit test. La généralisation à d’autres vins demanderait d’autres données. L’artefact pèse 2 247 octets. Sur ce Mac, au premier entraînement, la médiane était de 0,075 ms et le maximum de 0,191 ms pour une prédiction en mémoire (hors réseau). Les mesures du dernier entraînement sont dans `model/evaluation.json`.
+Les 45 prédictions correctes concernent ce petit test. La généralisation à d’autres vins demanderait d’autres données. L’artefact pèse 2 247 octets. Sur mon Mac, j’ai mesuré au premier entraînement une médiane de 0,075 ms et le maximum de 0,191 ms pour une prédiction en mémoire (hors réseau). Les mesures du dernier entraînement sont dans `model/evaluation.json`.
 
 ## Reproduire le test en Python 3.12
 
@@ -79,3 +79,17 @@ Les étapes Azure de référence sont dans `infra/`. Elles reprennent la section
 - Dépassement de 25 USD : −2 points. Les alertes avertissent sans arrêter les ressources. Suivre les dépenses et interrompre les essais avant le plafond.
 - Ressources encore actives 48 h après la soutenance : −1 point. Nettoyage prévu juste après la démonstration du 2 décembre. Vérifier le groupe avec `az group exists` et rechercher les groupes par défaut associés au projet sans toucher aux ressources d’autres cours.
 - Si le 24 novembre compte comme J1, J15 tombe le 8 décembre. Relever alors les coûts historiques filtrés sur le tag projet=dscc même après suppression. Conserver les captures dans docs.
+
+## Comment je traite les fichiers
+
+Je dépose un fichier JSON par vin dans `input/`. J’accepte un champ `features` de treize nombres et une taille maximale de 64 Kio. J’ai fourni un exemple valide et un exemple incomplet dans `docs/exemples/`. Pour une entrée invalide, je conserve le fichier original et un document qui explique le rejet.
+
+Pour distinguer deux versions d’un fichier, j’utilise ensemble son nom et son ETag. Le worker relit la version correspondante du blob. Si le résultat existe déjà, il le réutilise pour terminer l’écriture Cosmos. Ainsi, une interruption entre les deux écritures ne crée pas une deuxième ligne. Après cinq échecs, Azure Functions doit déplacer le message vers `inference-requests-poison`. Pour la démonstration, je pourrai envoyer un message de test incomplet dans la file et observer son déplacement.
+
+Exemple de message après validation (valeurs illustratives) :
+
+```json
+{"fileName":"vin-valide.json","etag":"8D000001","size":81,"timestamp":"2026-11-24T10:00:00Z"}
+```
+
+Je vérifie le code depuis la racine avec `PYTHONPATH=functions python -m pytest -q api/tests functions/tests` après avoir installé également `functions/requirements.txt`. Dans GitHub Actions, je teste chaque changement avant la construction de l’image. La publication sur GHCR est réservée aux push sur main.
