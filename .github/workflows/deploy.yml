@@ -1,0 +1,59 @@
+name: Déploiement Azure
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+      RG: rg-projet-ft
+      FUNC: func-dscc-ft26
+      ST: stdsccft26pipe
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publier l’image validée sur Container Apps
+        run: python infra/deployer-api.py
+      - name: Vérifier le commit en production
+        run: |
+          for n in {1..30}; do
+            if curl --max-time 15 -fsS "$API_URL/version" | jq -e --arg sha "$DEPLOY_SHA" '.commit == $sha'; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Configurer le worker et limiter CORS au site
+        run: |
+          origin=$(az storage account show -g "$RG" -n "$ST" --query primaryEndpoints.web -o tsv)
+          az functionapp config appsettings set -g "$RG" -n "$FUNC" --settings API_URL="$API_URL" PipelineStorage__blobServiceUri="https://$ST.blob.core.windows.net" PipelineStorage__queueServiceUri="https://$ST.queue.core.windows.net" PipelineStorage__credential=managedidentity COSMOS_ENDPOINT=https://cosmos-dscc-ft26.documents.azure.com:443/ -o none
+          az functionapp cors remove -g "$RG" -n "$FUNC" --allowed-origins '*' 'https://portal.azure.com' -o none
+          az functionapp cors add -g "$RG" -n "$FUNC" --allowed-origins "${origin%/}" -o none
+      - uses: Azure/functions-action@v1
+        with:
+          app-name: func-dscc-ft26
+          package: functions
+          sku: flexconsumption
+          remote-build: true
+      - name: Publier le modèle et le tableau de bord
+        run: |
+          hostname=$(az functionapp show -g "$RG" -n "$FUNC" --query defaultHostName -o tsv)
+          printf 'window.RECENT_URL = "https://%s/api/recent";\n' "$hostname" > web/config.js
+          az storage blob upload --account-name "$ST" -c models -n model-1.0.0.joblib -f model/model-1.0.0.joblib --overwrite -o none
+          az storage blob upload-batch --account-name "$ST" -d '$web' -s web --overwrite -o none
