@@ -1,0 +1,8 @@
+**
+!model/
+!model/model-1.0.0.joblib
+!model/requirements.txt
+!api/
+!api/requirements.txt
+!api/main.py
+!api/__init__.py

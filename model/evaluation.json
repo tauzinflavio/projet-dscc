@@ -1,0 +1,17 @@
+{
+  "train": 133,
+  "test": 45,
+  "scores": {
+    "logistique": {
+      "accuracy": 1.0,
+      "f1_macro": 1.0
+    },
+    "majoritaire": {
+      "accuracy": 0.4,
+      "f1_macro": 0.19047619047619047
+    }
+  },
+  "bytes": 2247,
+  "median_cpu_ms": 0.07491699943784624,
+  "max_cpu_ms": 0.1905000099213794
+}
