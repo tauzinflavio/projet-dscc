@@ -153,3 +153,5 @@ J’ai vérifié la connexion OIDC et la version de mon API en production au deu
 ### Mon premier essai de bout en bout sur Azure
 
 J’ai déposé deux fichiers dans input. Le vin valide est apparu dans /api/recent au bout de 16,8 secondes. Le modèle 1.0.0 a prédit le cultivar 1 avec 99,96 % de confiance. Le calcul a duré 5,4 ms. Pour le fichier incomplet, j’ai retrouvé dans rejected le motif « champ unique features contenant 13 mesures attendu ». Pour publier le site et le modèle, mon workflow utilise OIDC et un rôle de publication limité aux deux conteneurs concernés.
+
+J’ai également vérifié un message dans `inference-requests-poison` après l’envoi d’une requête de test dont le blob source n’existait pas. Le tableau de bord public affiche le résultat du fichier valide. [Tableau de bord](https://stdsccft26pipe.z1.web.core.windows.net/) · [Suivi des coûts](docs/rapport-couts.md)
