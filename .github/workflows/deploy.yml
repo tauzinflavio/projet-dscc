@@ -54,5 +54,5 @@ jobs:
         run: |
           hostname=$(az functionapp show -g "$RG" -n "$FUNC" --query defaultHostName -o tsv)
           printf 'window.RECENT_URL = "https://%s/api/recent";\n' "$hostname" > web/config.js
-          az storage blob upload --account-name "$ST" -c models -n model-1.0.0.joblib -f model/model-1.0.0.joblib --overwrite -o none
-          az storage blob upload-batch --account-name "$ST" -d '$web' -s web --overwrite -o none
+          az storage blob upload --auth-mode login --account-name "$ST" -c models -n model-1.0.0.joblib -f model/model-1.0.0.joblib --overwrite -o none
+          az storage blob upload-batch --auth-mode login --account-name "$ST" -d '$web' -s web --overwrite -o none

@@ -149,3 +149,7 @@ Pour ma démonstration, je conserve un [exemple illustratif de notification Even
 Pour tester les reprises, j’ai simulé deux incidents en local. Dans le premier test, le worker reçoit deux fois le même message. Dans le second, Cosmos DB échoue après l’écriture du résultat dans Blob Storage. Dans les deux cas, j’ai vérifié que le modèle est appelé une seule fois et que les deux tentatives présentent le même document à Cosmos DB.
 
 J’ai vérifié la connexion OIDC et la version de mon API en production au deuxième déploiement. L’action de publication des fonctions signalait ensuite que mon application était introuvable. Pour cibler précisément ma Function App, je fournis à Azure CLI son nom et son groupe de ressources. Mon archive contient les deux modules Python, la configuration de l’hôte et la liste des dépendances à installer sur Azure.
+
+### Mon premier essai de bout en bout sur Azure
+
+J’ai déposé deux fichiers dans input. Le vin valide est apparu dans /api/recent au bout de 16,8 secondes. Le modèle 1.0.0 a prédit le cultivar 1 avec 99,96 % de confiance. Le calcul a duré 5,4 ms. Pour le fichier incomplet, j’ai retrouvé dans rejected le motif « champ unique features contenant 13 mesures attendu ». Pour publier le site et le modèle, mon workflow utilise OIDC et un rôle de publication limité aux deux conteneurs concernés.
