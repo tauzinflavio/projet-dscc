@@ -93,3 +93,7 @@ Exemple de message après validation (valeurs illustratives) :
 ```
 
 Je vérifie le code depuis la racine avec `PYTHONPATH=functions python -m pytest -q api/tests functions/tests` après avoir installé également `functions/requirements.txt`. Dans GitHub Actions, je teste chaque changement avant la construction de l’image. La publication sur GHCR est réservée aux push sur main.
+
+## Mon tableau de bord
+
+Je consulte les 20 dernières inférences sur le site statique. Chaque ligne indique le fichier, l’heure, le cultivar prédit, la confiance et la durée du calcul. Le graphique compte les prédictions de chaque cultivar parmi les lignes affichées. La page interroge `/api/recent` toutes les 30 secondes. Avant la mise en ligne, je configure `web/config.js` avec l’adresse HTTPS de ma Function App et j’autorise uniquement l’origine de mon site dans sa configuration CORS.

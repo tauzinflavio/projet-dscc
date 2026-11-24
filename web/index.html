@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wine · Suivi des prédictions</title>
+<style>
+:root{font:16px/1.6 system-ui,sans-serif;color:#282327;background:#faf8f4}body{max-width:64rem;margin:auto;padding:2rem 5vw}header{border-bottom:2px solid #673249}h1,h2{font-family:Georgia,serif;font-weight:500}h1{font-size:clamp(2.3rem,6vw,4rem);margin:.3rem 0}h2{font-size:1.6rem}header p{margin:.35rem 0 1.3rem}section{margin-top:2rem}.plot{height:13rem}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{text-align:left;border-bottom:1px solid #d9d4cf;padding:.65rem .75rem}th{background:#eee9e4}.scroll{overflow:auto}#status{color:#534852}caption{text-align:left}canvas{max-width:100%}
+</style>
+<header><h1>Prédictions Wine</h1><p>Je suis les 20 dernières analyses de vins déposés sur Azure.</p></header>
+<p id="status" role="status">Chargement des résultats…</p>
+<section><h2>Cultivars prédits</h2><div class="plot"><canvas id="chart" role="img" aria-label="Nombre de prédictions pour chaque cultivar"></canvas></div></section>
+<section><h2>Dernières analyses</h2><div class="scroll"><table><thead><tr><th>Fichier</th><th>Heure locale</th><th>Cultivar</th><th>Confiance</th><th>Calcul</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+<script defer src="config.js"></script><script defer src="dashboard.js"></script>
+</html>
