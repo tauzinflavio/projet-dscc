@@ -5,10 +5,19 @@ from threading import Lock
 from time import perf_counter
 
 import joblib
+from azure.monitor.opentelemetry import configure_azure_monitor
 from fastapi import FastAPI
+from opentelemetry import metrics as otel_metrics
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
 
 DEFAULT_MODEL = Path(__file__).resolve().parents[1] / "model/model-1.0.0.joblib"
+
+
+if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    configure_azure_monitor()
+meter = otel_metrics.get_meter("dscc.wine")
+inference_count = meter.create_counter("wine.inferences", unit="{prediction}")
+model_latency = meter.create_histogram("wine.model.duration", unit="ms")
 
 
 @asynccontextmanager
@@ -48,6 +57,8 @@ def predict(data: Measurements):
     probabilities = model.predict_proba([data.features])[0]
     best = probabilities.argmax()
     elapsed = (perf_counter() - start) * 1000
+    inference_count.add(1)
+    model_latency.record(elapsed)
     with app.state.lock:
         app.state.calls += 1
         app.state.total_ms += elapsed
